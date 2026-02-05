@@ -332,9 +332,13 @@ A: 按用户+路由限流，每个用户在每个接口独立限额，详见 [bu
 
 - 📖 [项目首页](../README.md)
 - 💻 [示例代码](../examples/)
-- 📦 [npm 包](https://www.npmjs.com/package/@vextjs/rate-limit)
+- 📦 [npm 包](https://www.npmjs.com/package/flex-rate-limit)
 - 🐛 [报告问题](https://github.com/vextjs/rate-limit/issues)
 
 ---
 
 **祝您使用愉快！** ✨
+
+
+
+

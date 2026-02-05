@@ -250,7 +250,7 @@ keyGenerator: 'userAndRoute'
 ### 预定义键生成器详解
 
 ```javascript
-const { RateLimiter } = require('@vextjs/rate-limit');
+const { RateLimiter } = require('flex-rate-limit');
 
 // 1. 按 IP 限制（默认）
 const limiter1 = new RateLimiter({
@@ -470,4 +470,8 @@ await limiter.resetAll();
 
 **返回**：
 - 📖 [文档中心](./README.md) - 查看所有文档和学习路径
+
+
+
+
 

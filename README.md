@@ -1,10 +1,10 @@
-# @vextjs/rate-limit
+# flex-rate-limit
 
 > Node.js 通用速率限制模块 - 框架无关、灵活且生产就绪
 
-[![npm version](https://img.shields.io/npm/v/@vextjs/rate-limit.svg)](https://www.npmjs.com/package/@vextjs/rate-limit)
+[![npm version](https://img.shields.io/npm/v/flex-rate-limit.svg)](https://www.npmjs.com/package/flex-rate-limit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/node/v/@vextjs/rate-limit.svg)](https://nodejs.org)
+[![Node.js Version](https://img.shields.io/node/v/flex-rate-limit.svg)](https://nodejs.org)
 
 ## ✨ 特性
 
@@ -20,12 +20,12 @@
 ## 📦 安装
 
 ```bash
-npm install @vextjs/rate-limit
+npm install flex-rate-limit
 ```
 
 Redis 支持：
 ```bash
-npm install @vextjs/rate-limit ioredis
+npm install flex-rate-limit ioredis
 ```
 
 ## 🚀 快速开始
@@ -33,7 +33,7 @@ npm install @vextjs/rate-limit ioredis
 ### 最简单的例子
 
 ```javascript
-const { RateLimiter } = require('@vextjs/rate-limit');
+const { RateLimiter } = require('flex-rate-limit');
 
 const limiter = new RateLimiter({
   windowMs: 15 * 60 * 1000, // 15分钟
@@ -54,7 +54,7 @@ if (!result.allowed) {
 
 ```javascript
 const express = require('express');
-const { RateLimiter } = require('@vextjs/rate-limit');
+const { RateLimiter } = require('flex-rate-limit');
 
 const app = express();
 
@@ -115,7 +115,7 @@ app.listen(3000);
 支持基于 **用户ID + 路由** 的限流，每个用户在每个接口独立计数：
 
 ```javascript
-const { RateLimiter } = require('@vextjs/rate-limit');
+const { RateLimiter } = require('flex-rate-limit');
 
 const limiter = new RateLimiter({
   windowMs: 15 * 60 * 1000,
@@ -220,3 +220,5 @@ npm run coverage
 ---
 
 由 vext.js 团队用 ❤️ 制作
+
+

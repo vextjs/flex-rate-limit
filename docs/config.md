@@ -30,7 +30,7 @@
 最简单的配置：
 
 ```javascript
-const { RateLimiter } = require('@vextjs/rate-limit');
+const { RateLimiter } = require('flex-rate-limit');
 
 // 默认配置：1分钟内最多100次请求
 const limiter = new RateLimiter({
@@ -271,7 +271,7 @@ store: 'redis://localhost:6379'
 
 // 方式3：Redis Store实例（推荐）
 const Redis = require('ioredis');
-const { RedisStore } = require('@vextjs/rate-limit');
+const { RedisStore } = require('flex-rate-limit');
 
 store: new RedisStore({
   client: new Redis({ host: '127.0.0.1', port: 6379 }),
@@ -353,7 +353,7 @@ const limiter = new RateLimiter({
 ## 完整配置示例
 
 ```javascript
-const { RateLimiter } = require('@vextjs/rate-limit');
+const { RateLimiter } = require('flex-rate-limit');
 
 const limiter = new RateLimiter({
   // 核心配置
@@ -475,7 +475,7 @@ const tieredLimiter = new RateLimiter({
 
 ```javascript
 const Redis = require('ioredis');
-const { RateLimiter, RedisStore } = require('@vextjs/rate-limit');
+const { RateLimiter, RedisStore } = require('flex-rate-limit');
 
 const distributedLimiter = new RateLimiter({
   windowMs: 60 * 1000,
@@ -508,7 +508,7 @@ const distributedLimiter = new RateLimiter({
 
 ```javascript
 const Redis = require('ioredis');
-const { RateLimiter, RedisStore } = require('@vextjs/rate-limit');
+const { RateLimiter, RedisStore } = require('flex-rate-limit');
 
 const redis = new Redis({
   host: 'localhost',
@@ -546,4 +546,8 @@ const limiter = new RateLimiter({
   }),
 });
 ```
+
+
+
+
 

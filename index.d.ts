@@ -1,4 +1,4 @@
-// Type definitions for @vextjs/rate-limit v1.0.0
+// Type definitions for flex-rate-limit v1.0.0
 // Project: https://github.com/vextjs/rate-limit
 // Definitions by: rate-limit Team
 
@@ -255,4 +255,6 @@ export const algorithms: {
  * 预定义的键生成器集合
  */
 export const keyGenerators: KeyGenerators;
+
+
 

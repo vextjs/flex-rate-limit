@@ -283,7 +283,7 @@ const limiter = new RateLimiter({
 ```javascript
 // ✅ 推荐：Redis 集群
 const Redis = require('ioredis');
-const { RedisStore } = require('@vextjs/rate-limit');
+const { RedisStore } = require('flex-rate-limit');
 
 const cluster = new Redis.Cluster([
   { host: 'node1', port: 6379 },
@@ -365,4 +365,8 @@ const limiter = new RateLimiter({
 
 **返回**：
 - 📖 [文档中心](./README.md) - 查看所有文档和学习路径
+
+
+
+
 

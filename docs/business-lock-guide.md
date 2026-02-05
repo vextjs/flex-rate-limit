@@ -86,7 +86,7 @@ keyGenerator: (ctx, context) => {
 ### 步骤1：安装
 
 ```bash
-npm install @vextjs/rate-limit
+npm install flex-rate-limit
 ```
 
 ### 步骤2：创建业务锁中间件（Egg.js）
@@ -94,7 +94,7 @@ npm install @vextjs/rate-limit
 **文件**: `app/middleware/business-lock.js`
 
 ```javascript
-const { RateLimiter } = require('@vextjs/rate-limit');
+const { RateLimiter } = require('flex-rate-limit');
 
 module.exports = (options = {}) => {
   const limiter = new RateLimiter({
@@ -158,7 +158,7 @@ module.exports = (app) => {
 
 ```javascript
 // app/middleware/rate-limit.js
-const { RateLimiter } = require('@vextjs/rate-limit');
+const { RateLimiter } = require('flex-rate-limit');
 
 module.exports = (app) => {
   return {
@@ -261,7 +261,7 @@ module.exports = (app) => {
 ### 示例2：使用预定义 keyGenerator
 
 ```javascript
-const { RateLimiter, keyGenerators } = require('@vextjs/rate-limit');
+const { RateLimiter, keyGenerators } = require('flex-rate-limit');
 
 const limiter = new RateLimiter({
   windowMs: 60 * 1000,
@@ -399,7 +399,7 @@ const limiter = new RateLimiter({
 
 ```javascript
 const Redis = require('ioredis');
-const { RateLimiter, RedisStore } = require('@vextjs/rate-limit');
+const { RateLimiter, RedisStore } = require('flex-rate-limit');
 
 const redis = new Redis({
   host: '127.0.0.1',
@@ -577,7 +577,7 @@ if (!result.allowed) {
 
 ```javascript
 const Redis = require('ioredis');
-const { RedisStore } = require('@vextjs/rate-limit');
+const { RedisStore } = require('flex-rate-limit');
 
 const store = new RedisStore({
   client: new Redis({
@@ -625,7 +625,7 @@ const limiter = new RateLimiter({
 
 ```javascript
 // test/business-lock.test.js
-const { RateLimiter } = require('@vextjs/rate-limit');
+const { RateLimiter } = require('flex-rate-limit');
 
 describe('Business Lock', () => {
   it('should limit per user per route', async () => {
@@ -737,3 +737,8 @@ async checkLimitStatus(ctx) {
 ---
 
 **最后更新**: 2026-02-05
+
+
+
+
+

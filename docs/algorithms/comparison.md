@@ -70,7 +70,7 @@
 ### 配置示例
 
 ```javascript
-const { RateLimiter } = require('@vextjs/rate-limit');
+const { RateLimiter } = require('flex-rate-limit');
 
 // 登录保护：15分钟最多5次
 const loginLimiter = new RateLimiter({
@@ -142,7 +142,7 @@ const apiLimiter = new RateLimiter({
 ### 配置示例
 
 ```javascript
-const { RateLimiter } = require('@vextjs/rate-limit');
+const { RateLimiter } = require('flex-rate-limit');
 
 // 高并发API：1分钟最多100次
 const highConcurrencyLimiter = new RateLimiter({
@@ -209,7 +209,7 @@ const highConcurrencyLimiter = new RateLimiter({
 ### 配置示例
 
 ```javascript
-const { RateLimiter } = require('@vextjs/rate-limit');
+const { RateLimiter } = require('flex-rate-limit');
 
 // API网关：允许突发100次，平均每秒100次
 const gatewayLimiter = new RateLimiter({
@@ -287,7 +287,7 @@ const batchLimiter = new RateLimiter({
 ### 配置示例
 
 ```javascript
-const { RateLimiter } = require('@vextjs/rate-limit');
+const { RateLimiter } = require('flex-rate-limit');
 
 // 保护后端：恒定速率处理，每秒100个
 const backendProtector = new RateLimiter({
@@ -548,3 +548,7 @@ const limiter = new RateLimiter({
 
 **最后更新**: 2026-02-05  
 **维护者**: AI Assistant
+
+
+
+
