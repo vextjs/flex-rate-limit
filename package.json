@@ -1,6 +1,6 @@
 {
   "name": "flex-rate-limit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Universal rate limiting module for Node.js - supports any framework, multiple storage backends, flexible algorithms",
   "main": "lib/index.js",
   "types": "index.d.ts",

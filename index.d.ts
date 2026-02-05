@@ -53,6 +53,21 @@ export interface RateLimiterOptions {
 
   /**
    * 确定是否跳过速率限制的函数
+   *
+   * 可用于实现：
+   * - IP 白名单：whitelistIPs.includes(req.ip)
+   * - 管理员跳过：req.user?.role === 'admin'
+   * - 健康检查跳过：req.path === '/health'
+   * - 特定路由跳过：跳过监控端点等
+   *
+   * @example
+   * // IP 白名单
+   * skip: (req) => ['127.0.0.1', '192.168.1.100'].includes(req.ip)
+   *
+   * @example
+   * // 管理员跳过限流
+   * skip: (req) => req.user?.role === 'admin'
+   *
    * @default () => false
    */
   skip?: (req: any) => boolean | Promise<boolean>;

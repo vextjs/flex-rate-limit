@@ -141,14 +141,142 @@ const limiter = new RateLimiter({
 
 详见：[业务锁完整指南](./docs/business-lock-guide.md)
 
+### IP 白名单与访问控制 ⭐⭐
+
+支持 **IP 白名单/黑名单**，可指定路由只允许特定 IP 访问：
+
+```javascript
+const { RateLimiter } = require('flex-rate-limit');
+
+// 示例 1: 简单白名单 - 跳过限流
+const limiter = new RateLimiter({
+  windowMs: 60 * 1000,
+  max: 100,
+  skip: (req) => ['127.0.0.1', '192.168.1.100'].includes(req.ip),
+});
+
+// 示例 2: 管理接口 - 只允许特定 IP 访问（403 拒绝）
+const adminLimiter = new RateLimiter({
+  skip: (req) => !['192.168.1.10', '192.168.1.11'].includes(req.ip),
+  handler: (req, res) => {
+    res.status(403).json({ error: '只有授权 IP 可以访问' });
+  },
+});
+app.use('/api/admin', adminLimiter.middleware());
+
+// 示例 3: IP 段白名单（CIDR 支持）
+// 支持 10.0.0.0/8、192.168.0.0/16 等内网 IP 段
+
+// 示例 4: 黑名单 - 限制恶意 IP
+const limiter = new RateLimiter({
+  max: (req) => ['1.2.3.4'].includes(req.ip) ? 1 : 100,
+});
+```
+
+**完整文档**: [高级用法 - IP 白名单章节](./docs/guides/advanced.md#ip-白名单与黑名单-)
+
+### 动态 IP 白名单配置 ⭐⭐⭐
+
+支持 **全局 + 路由级 IP 白名单**、**动态配置**和**多种配置方式**：
+
+**配置示例**:
+```javascript
+// 全局白名单（所有路由生效）
+const globalWhitelist = ['127.0.0.1', '192.168.1.100'];
+
+// 路由级白名单（独立配置）
+const routeWhitelists = {
+  '/api/admin': ['192.168.1.10', '192.168.1.11'],
+  '/api/internal': ['10.0.0.0/8', '192.168.0.0/16'],  // 支持 IP 段
+};
+```
+
+**动态管理 API**:
+```bash
+POST /api/whitelist/global/add      # 添加全局白名单
+POST /api/whitelist/global/remove   # 移除全局白名单
+POST /api/whitelist/route/add       # 添加路由白名单
+GET  /api/whitelist/config           # 查看配置
+```
+
+**环境变量配置**（生产环境推荐）:
+```bash
+GLOBAL_IP_WHITELIST=127.0.0.1,192.168.1.1 \
+ADMIN_IP_WHITELIST=192.168.1.10,192.168.1.11 \
+node app.js
+```
+
+**完整示例**:
+- Express: `express-ip-whitelist-independent.js` ⭐（推荐：独立版本）
+- Koa: `koa-ip-whitelist-independent.js` ⭐
+- Egg.js: `egg-ip-whitelist-advanced.js`
+
+**⚠️ 重要说明 - 白名单与限流的关系**:
+
+有两种实现方式，根据你的需求选择：
+
+| 实现方式 | 白名单 IP 是否限流 | 适用场景 | 示例文件 |
+|---------|-------------------|---------|---------|
+| **耦合版本** | ❌ 不限流（跳过） | 白名单 = 特权用户 | `express-ip-whitelist-advanced.js` |
+| **独立版本** ⭐ | ✅ 限流（独立） | 白名单 = 访问控制 | `express-ip-whitelist-independent.js` |
+
+**独立版本示例**（推荐）:
+```javascript
+// 白名单和限流完全独立
+app.get('/api/admin/users',
+  ipWhitelistMiddleware('/api/admin'),  // 第一层：白名单验证（403）
+  createRateLimiter({ max: 200 }),      // 第二层：限流控制（429）
+  handler
+);
+
+// 效果：
+// - 非白名单 IP → 403 Forbidden（立即拒绝）
+// - 白名单 IP → 继续到限流检查
+//   - 未超限 → 200 OK
+//   - 超限 → 429 Too Many Requests
+```
+
+**详细说明**: [白名单与限流独立性文档](./docs/whitelist-ratelimit-independence.md)
+
+**配置文件**: `config/ip-whitelist.json`
+
+---
+
+### ⚠️ 重要：配置场景说明
+
+在使用 IP 白名单功能前，请了解以下配置场景：
+
+| 配置情况 | 处理结果 | 说明 |
+|---------|---------|------|
+| **只配置限流** | 所有 IP 可访问 + 限流 | 未配置白名单 = 允许所有 |
+| **只配置白名单** | 白名单 IP 无限制访问 | ⚠️ 不推荐（无限流保护）|
+| **白名单 + 限流** | 白名单验证 → 限流检查 | ✅ 最推荐（双重保护）|
+| **全局白名单** | 所有路由通用 + 各自限流 | ✅ 适合办公室网络 |
+
+**关键要点**：
+1. ✅ 未配置白名单 = 允许所有 IP（不是拒绝所有）
+2. ✅ 白名单 IP 也会被限流（独立版本）
+3. ✅ 全局白名单优先级更高（但仍需限流）
+4. ✅ 推荐配置：白名单 + 限流一起使用
+
+**详细配置场景**: [配置场景完整文档](./docs/whitelist-ratelimit-config-scenarios.md)
+
+---
+
 ### 预定义限制级别
+
+根据不同场景快速配置限流级别：
 
 ```javascript
 const limit = {
-  strict: 5,      // 15分钟5次（登录、注册等）
+  strict: 5,      // 15分钟5次（登录、注册等敏感操作）
   normal: 50,     // 1小时50次（数据修改等）
   relaxed: 200,   // 1分钟200次（数据查询等）
 };
+
+// 使用示例
+app.post('/api/login', limiter.middleware({ max: limit.strict }), handler);
+app.get('/api/data', limiter.middleware({ max: limit.relaxed }), handler);
 ```
 
 ### 路由级配置
@@ -179,12 +307,35 @@ router.post('/api/login', limit.strict, controller.auth.login);
 
 查看 `examples/` 目录获取完整的可运行示例：
 
-- **Express**: quickstart-express.js, express-example.js, express-router-example.js
-- **Koa**: quickstart-koa.js, koa-example.js, koa-router-example.js
-- **Egg.js**: quickstart-egg.js, egg-example.js, egg-router-example.js, **egg-business-lock-example.js** ⭐
-- **Hapi**: quickstart-hapi.js, hapi-example.js
-- **Fastify**: quickstart-fastify.js, fastify-router-example.js
-- **独立使用**: standalone-example.js
+### 按框架分类
+
+- **Express**: 
+  - `quickstart-express.js` - 快速开始
+  - `express-router-example.js` - 路由级限流
+  - `express-ip-whitelist-independent.js` ⭐ - IP白名单（独立版本，推荐）
+  - `express-ip-whitelist-advanced.js` - IP白名单（耦合版本）
+
+- **Koa**: 
+  - `quickstart-koa.js` - 快速开始
+  - `koa-router-example.js` - 路由级限流
+  - `koa-ip-whitelist-independent.js` ⭐ - IP白名单（独立版本）
+  
+- **Egg.js**: 
+  - `quickstart-egg.js` - 快速开始
+  - `egg-router-example.js` - 路由级限流
+  - `egg-business-lock-example.js` ⭐ - 业务锁（用户+路由）
+  - `egg-ip-whitelist-advanced.js` - IP白名单
+
+- **其他框架**:
+  - Hapi: `quickstart-hapi.js`, `hapi-example.js`
+  - Fastify: `quickstart-fastify.js`, `fastify-router-example.js`
+
+### 按功能分类
+
+- 🚀 **快速开始**: `quickstart-*.js`
+- 🔒 **IP 白名单**: `*-ip-whitelist-*.js` （推荐使用 `independent` 版本）
+- 👤 **业务锁**: `egg-business-lock-example.js`
+- 🔧 **独立使用**: `standalone-example.js`
 
 ## 🧪 测试
 

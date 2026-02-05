@@ -32,6 +32,15 @@
 5. **[存储后端](./guides/storage.md)**  
    Memory vs Redis，性能对比与选择决策
 
+6. **[IP 白名单配置场景](./whitelist-ratelimit-config-scenarios.md)** ⭐ 新增  
+   四个核心配置场景详解（必读）
+
+7. **[白名单与限流独立性](./whitelist-ratelimit-independence.md)** ⭐ 新增  
+   耦合版本 vs 独立版本对比说明
+
+8. **[IP 白名单动态配置](./ip-whitelist-dynamic-config.md)**  
+   快速使用指南和配置方式
+
 ---
 
 ### 🎯 算法专题（40-90分钟）
@@ -139,10 +148,38 @@ guides/config.md → guides/storage.md → guides/advanced.md → 完成！
 | guides/config.md | ⭐⭐ 中级 | 10分钟 | 需要配置的人 |
 | guides/advanced.md | ⭐⭐⭐ 进阶 | 20分钟 | 进阶用户 |
 | guides/business-lock-guide.md | ⭐⭐⭐ 进阶 | 20分钟 | 业务系统开发 |
+| **whitelist-ratelimit-config-scenarios.md** | **⭐⭐ 中级** | **15分钟** | **需要 IP 白名单** |
+| **whitelist-ratelimit-independence.md** | **⭐⭐ 中级** | **10分钟** | **理解独立性** |
+| **ip-whitelist-dynamic-config.md** | **⭐⭐ 中级** | **10分钟** | **快速上手** |
 | guides/storage.md | ⭐⭐⭐ 进阶 | 15分钟 | 分布式部署 |
 | algorithms/comparison.md | ⭐⭐⭐ 进阶 | 40分钟 | 需要选择算法 |
 | algorithms/deep-analysis.md | ⭐⭐⭐⭐⭐ 专家 | 90分钟 | 技术深入研究 |
 | reference/api-reference.md | ⭐⭐ 中级 | 查询用 | 需要查API |
+
+---
+
+### 路径4：IP 白名单配置（30分钟）⭐ 新增
+
+```
+whitelist-ratelimit-config-scenarios.md → whitelist-ratelimit-independence.md 
+→ ip-whitelist-dynamic-config.md → 完成！
+```
+
+**适合**：
+- 需要 IP 访问控制
+- 需要白名单 + 限流组合
+- 需要全局/路由级白名单
+
+**学习目标**：
+- ✅ 理解四个核心配置场景
+- ✅ 掌握白名单与限流的独立性
+- ✅ 能配置全局和路由级白名单
+- ✅ 能实现动态管理白名单
+
+**关键文档**：
+1. [配置场景详解](./whitelist-ratelimit-config-scenarios.md) - 必读
+2. [独立性说明](./whitelist-ratelimit-independence.md) - 理解原理
+3. [动态配置指南](./ip-whitelist-dynamic-config.md) - 实战应用
 
 ---
 
@@ -156,6 +193,21 @@ guides/config.md → guides/storage.md → guides/advanced.md → 完成！
 
 ### 我想按用户限流
 → [guides/business-lock-guide.md](./guides/business-lock-guide.md)
+
+### 我想配置 IP 白名单 ⭐
+→ [whitelist-ratelimit-config-scenarios.md](./whitelist-ratelimit-config-scenarios.md) - 四个核心场景
+
+### 我想知道"只配置限流"会怎样 ⭐
+→ [whitelist-ratelimit-config-scenarios.md](./whitelist-ratelimit-config-scenarios.md#问题-1-限流配置了-internal但白名单没配置-internal)
+
+### 我想知道"只配置白名单"会怎样 ⭐
+→ [whitelist-ratelimit-config-scenarios.md](./whitelist-ratelimit-config-scenarios.md#问题-2-白名单配置了-internal但限流没配置-internal)
+
+### 我想配置全局白名单 ⭐
+→ [whitelist-ratelimit-config-scenarios.md](./whitelist-ratelimit-config-scenarios.md#问题-4-白名单能否配置全局路由)
+
+### 我想理解白名单和限流的关系 ⭐
+→ [whitelist-ratelimit-independence.md](./whitelist-ratelimit-independence.md)
 
 ### 我想选择算法
 → [algorithms/comparison.md](./algorithms/comparison.md) - 选择决策树

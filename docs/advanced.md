@@ -1,5 +1,27 @@
 # 高级用法
 
+## ⚠️ 重要提示
+
+在开始之前，请先了解 **IP 白名单与限流的配置关系**：
+
+### 配置场景快速参考
+
+| 配置情况 | 效果 | 适用场景 |
+|---------|------|---------|
+| 只配置限流 | 所有 IP 可访问 + 限流 | 公开 API |
+| 只配置白名单 | 白名单 IP 无限制访问 | ⚠️ 不推荐 |
+| 白名单 + 限流 | 白名单验证 → 限流检查 | ✅ 推荐 |
+| 全局白名单 | 所有路由通用 + 各自限流 | 办公室网络 |
+
+**关键要点**：
+- 未配置白名单 = 允许所有 IP（不是拒绝）
+- 白名单 IP 也会被限流（独立版本）
+- 推荐配置：白名单 + 限流一起使用
+
+**详细说明**: [配置场景详解](./whitelist-ratelimit-config-scenarios.md) | [独立性说明](./whitelist-ratelimit-independence.md)
+
+---
+
 ## 📚 目录
 
 - [不同路由的不同限制](#不同路由的不同限制)
@@ -12,7 +34,14 @@
   - [按用户ID限制](#按用户id限制)
   - [按用户和路由限制（业务锁）](#按用户和路由限制业务锁)
   - [按API密钥限制](#按api密钥限制)
-- [跳过某些请求](#跳过某些请求)
+- [IP 白名单与黑名单](#ip-白名单与黑名单-)
+  - [基础 IP 白名单](#基础-ip-白名单)
+  - [路由级白名单](#路由级白名单只允许特定-ip-访问)
+  - [IP 段白名单](#ip-段白名单cidr-支持)
+  - [环境变量配置](#环境变量配置白名单生产环境推荐)
+  - [黑名单模式](#黑名单模式限制特定-ip)
+  - [组合白名单](#组合白名单ip--用户角色)
+- [跳过某些请求](#跳过条件通用)
 - [自定义限流响应](#自定义限流响应)
 - [Redis 分布式存储](#redis-分布式存储)
 - [自定义存储后端](#自定义存储后端)
@@ -406,23 +435,227 @@ const limiter = new RateLimiter({
 });
 ```
 
-## 跳过条件
+## IP 白名单与黑名单 ⭐
+
+使用 `skip` 选项可以实现 IP 白名单功能，允许特定 IP 地址跳过限流或实现更精细的访问控制。
+
+### ⚠️ 配置前必读
+
+在配置 IP 白名单前，请先了解四个核心配置场景：
+
+#### 1. 只配置限流，不配置白名单
+```javascript
+// 不配置白名单中间件
+app.get('/api/data', createRateLimiter({ max: 100 }), handler);
+// 效果：所有 IP 可访问 + 限流 100次/分钟
+```
+
+#### 2. 只配置白名单，不配置限流 ⚠️
+```javascript
+// 不配置限流中间件
+app.get('/api/admin', ipWhitelistMiddleware('/api/admin'), handler);
+// 效果：非白名单 403 / 白名单无限制访问（不推荐）
+```
+
+#### 3. 白名单 + 限流都配置 ✅
+```javascript
+// 推荐配置
+app.get('/api/admin',
+  ipWhitelistMiddleware('/api/admin'),  // 白名单验证
+  createRateLimiter({ max: 200 }),      // 限流控制
+  handler
+);
+// 效果：非白名单 403 / 白名单通过后仍受限流
+```
+
+#### 4. 全局白名单 ✅
+```bash
+# 环境变量
+GLOBAL_IP_WHITELIST=127.0.0.1,192.168.1.100
+# 效果：这些 IP 可访问所有路由，但仍受各路由限流
+```
+
+**详细说明**: [配置场景完整文档](./whitelist-ratelimit-config-scenarios.md)
+
+---
+
+### 基础 IP 白名单
+
+```javascript
+// 定义白名单 IP 列表
+const whitelistIPs = ['127.0.0.1', '::1', '192.168.1.100', '10.0.0.50'];
+
+const limiter = new RateLimiter({
+  windowMs: 60 * 1000,
+  max: 100,
+  skip: (req) => {
+    const clientIP = req.ip || req.socket?.remoteAddress;
+    // 白名单内的 IP 完全跳过限流
+    return whitelistIPs.includes(clientIP);
+  },
+});
+
+app.use(limiter.middleware());
+```
+
+### 路由级白名单（只允许特定 IP 访问）
+
+```javascript
+// 管理员接口：只允许特定 IP 访问
+const adminWhitelist = ['192.168.1.10', '192.168.1.11'];
+
+const adminLimiter = new RateLimiter({
+  windowMs: 60 * 1000,
+  max: 100,
+  skip: (req) => {
+    const clientIP = req.ip || req.socket?.remoteAddress;
+    // 不在白名单 = 拒绝访问
+    return !adminWhitelist.includes(clientIP);
+  },
+  handler: (req, res) => {
+    // 自定义拒绝消息
+    res.status(403).json({
+      error: '访问被拒绝',
+      message: '只有授权的 IP 地址可以访问此资源',
+    });
+  },
+});
+
+app.use('/api/admin', adminLimiter.middleware());
+```
+
+### IP 段白名单（CIDR 支持）
+
+```javascript
+// 推荐使用 ipaddr.js 或 ip-range-check 库
+const ipaddr = require('ipaddr.js');
+
+const allowedRanges = ['192.168.1.0/24', '10.0.0.0/8'];
+
+const limiter = new RateLimiter({
+  windowMs: 60 * 1000,
+  max: 50,
+  skip: (req) => {
+    const clientIP = req.ip || req.socket?.remoteAddress;
+    
+    try {
+      const addr = ipaddr.parse(clientIP);
+      return allowedRanges.some((range) => {
+        const [subnet, bits] = range.split('/');
+        const subnetAddr = ipaddr.parse(subnet);
+        return addr.match(subnetAddr, parseInt(bits));
+      });
+    } catch (err) {
+      return false; // 无效 IP，不跳过限流
+    }
+  },
+});
+
+app.use('/api/internal', limiter.middleware());
+```
+
+### 环境变量配置白名单（生产环境推荐）
+
+```javascript
+// 从环境变量读取白名单
+const whitelistIPs = (process.env.IP_WHITELIST || '').split(',').filter(Boolean);
+
+const limiter = new RateLimiter({
+  windowMs: 60 * 1000,
+  max: 100,
+  skip: (req) => {
+    if (whitelistIPs.length === 0) {
+      return false; // 未配置白名单，不跳过
+    }
+    const clientIP = req.ip || req.socket?.remoteAddress;
+    return whitelistIPs.includes(clientIP);
+  },
+});
+
+// 启动命令示例：
+// IP_WHITELIST=127.0.0.1,192.168.1.100 node app.js
+```
+
+### 黑名单模式（限制特定 IP）
+
+```javascript
+const blacklistIPs = ['1.2.3.4', '5.6.7.8']; // 恶意 IP
+
+const limiter = new RateLimiter({
+  windowMs: 60 * 1000,
+  max: (req) => {
+    const clientIP = req.ip || req.socket?.remoteAddress;
+    // 黑名单 IP 获得极低限额
+    if (blacklistIPs.includes(clientIP)) {
+      return 1; // 每分钟只能 1 次
+    }
+    return 100; // 正常限额
+  },
+});
+```
+
+### 组合白名单（IP + 用户角色）
+
+```javascript
+const vipIPs = ['192.168.1.200', '192.168.1.201'];
+
+const smartLimiter = new RateLimiter({
+  windowMs: 60 * 1000,
+  max: async (req) => {
+    const clientIP = req.ip || req.socket?.remoteAddress;
+    const isVIPIP = vipIPs.includes(clientIP);
+    const isVIPUser = req.user?.tier === 'premium';
+    
+    if (isVIPIP || isVIPUser) {
+      return 1000; // VIP 限额
+    }
+    return 100; // 普通限额
+  },
+  skip: (req) => {
+    // 管理员完全跳过限流
+    return req.user?.role === 'admin';
+  },
+});
+```
+
+### 白名单最佳实践
+
+| 场景 | 实现方式 | 示例 |
+|------|---------|------|
+| **内部 API** | IP 段白名单 | `192.168.0.0/16`、`10.0.0.0/8` |
+| **管理后台** | 严格 IP 白名单 + 403 拒绝 | 只允许办公室 IP |
+| **VIP 用户** | 组合白名单（IP + 角色） | 特定 IP 或高级用户更高限额 |
+| **生产环境** | 环境变量配置 | `IP_WHITELIST=1.2.3.4,5.6.7.8` |
+| **防护恶意 IP** | 黑名单 + 低限额 | 已知攻击 IP 限制为 1 次/分钟 |
+
+**完整示例文件**: `examples/ip-whitelist-example.js`
+
+---
+
+## 跳过条件（通用）
+
+除了 IP 白名单，`skip` 选项还支持其他跳过条件：
 
 ```javascript
 const limiter = new RateLimiter({
   skip: (req) => {
-    // 跳过管理员用户的速率限制
+    // 1. 跳过管理员用户
     if (req.user?.role === 'admin') {
       return true;
     }
     
-    // 跳过健康检查端点
+    // 2. 跳过健康检查端点
     if (req.path === '/health' || req.path === '/metrics') {
       return true;
     }
     
-    // 跳过内部请求（例如来自本地IP）
+    // 3. 跳过内部请求（本地 IP）
     if (req.ip === '127.0.0.1' || req.ip === '::1') {
+      return true;
+    }
+    
+    // 4. 跳过特定 User-Agent（监控工具）
+    if (req.headers['user-agent']?.includes('Monitor')) {
       return true;
     }
     
