@@ -1,0 +1,84 @@
+{
+  "name": "@vextjs/rate-limit",
+  "version": "1.0.0",
+  "description": "Universal rate limiting module for Node.js - supports any framework, multiple storage backends, flexible algorithms",
+  "main": "lib/index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./lib/index.js",
+      "import": "./index.mjs",
+      "types": "./index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/",
+    "index.d.ts",
+    "index.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "rate-limit",
+    "rate-limiter",
+    "throttle",
+    "rate-limiting",
+    "api-rate-limit",
+    "express",
+    "koa",
+    "fastify",
+    "hapi",
+    "redis",
+    "memory",
+    "sliding-window",
+    "token-bucket",
+    "leaky-bucket",
+    "distributed",
+    "middleware",
+    "framework-agnostic"
+  ],
+  "author": "vext.js Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vextjs/rate-limit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vextjs/rate-limit/issues"
+  },
+  "homepage": "https://github.com/vextjs/rate-limit#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "scripts": {
+    "test": "mocha test/**/*.test.js --timeout 5000 --exit",
+    "test:unit": "mocha test/unit/**/*.test.js --exit",
+    "test:integration": "mocha test/integration/**/*.test.js --timeout 5000 --exit",
+    "test:all": "npm run test:unit && npm run test:integration",
+    "coverage": "nyc --reporter=text --reporter=lcov --reporter=html npm test",
+    "lint": "eslint lib/**/*.js test/**/*.js",
+    "lint:fix": "eslint lib/**/*.js test/**/*.js --fix",
+    "example:express": "node examples/express-example.js",
+    "example:koa": "node examples/koa-example.js",
+    "example:egg": "node examples/egg-example.js",
+    "example:hapi": "node examples/hapi-example.js",
+    "example:standalone": "node examples/standalone-example.js",
+    "example:all": "npm run example:standalone"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "chai": "^4.3.10",
+    "eslint": "^8.56.0",
+    "express": "^4.18.2",
+    "ioredis": "^5.3.2",
+    "koa": "^2.14.2",
+    "mocha": "^10.2.0",
+    "nyc": "^15.1.0",
+    "redis-mock": "^0.56.3",
+    "sinon": "^17.0.1"
+  },
+  "optionalDependencies": {
+    "ioredis": "^5.3.2"
+  }
+}

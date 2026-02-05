@@ -1,3 +1,8 @@
+# 临时文件
+reports/
+*.tmp
+*.temp
+
 # Logs
 logs
 *.log
