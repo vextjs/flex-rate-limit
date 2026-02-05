@@ -49,7 +49,7 @@ export interface RateLimiterOptions {
    * 从请求对象生成限流键的函数
    * @default (req) => req.ip
    */
-  keyGenerator?: (req: any) => string | Promise<string>;
+  keyGenerator?: (req: any, context?: { route?: string }) => string | Promise<string>;
 
   /**
    * 确定是否跳过速率限制的函数
@@ -119,13 +119,32 @@ export interface Store {
 }
 
 /**
+ * Redis 客户端接口（兼容 ioredis）
+ */
+export interface RedisClient {
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string): Promise<string>;
+  setex(key: string, seconds: number, value: string): Promise<string>;
+  incr(key: string): Promise<number>;
+  decr(key: string): Promise<number>;
+  del(...keys: string[]): Promise<number>;
+  keys(pattern: string): Promise<string[]>;
+  expire(key: string, seconds: number): Promise<number>;
+  zadd(key: string, score: number, member: string): Promise<number>;
+  zcard(key: string): Promise<number>;
+  zremrangebyscore(key: string, min: string | number, max: string | number): Promise<number>;
+  zpopmax(key: string): Promise<string[]>;
+  type(key: string): Promise<string>;
+}
+
+/**
  * Redis 存储选项
  */
 export interface RedisStoreOptions {
   /**
    * Redis 客户端实例（ioredis）
    */
-  client: any;
+  client: RedisClient;
 
   /**
    * 键前缀
@@ -177,6 +196,13 @@ export interface KeyGenerators {
   userAndRoute(req: any, context?: any): string;
 }
 
+/**
+ * 中间件选项（预留用于未来扩展）
+ */
+export interface MiddlewareOptions {
+  [key: string]: any;
+}
+
 // ========== 导出的类 ==========
 
 /**
@@ -209,7 +235,7 @@ export class RateLimiter {
    * @param options - 中间件选项
    * @returns Express/Koa 中间件函数
    */
-  middleware(options?: any): (req: any, res: any, next?: Function) => Promise<void>;
+  middleware(options?: MiddlewareOptions): (req: any, res: any, next?: Function) => Promise<void>;
 }
 
 /**
@@ -256,5 +282,17 @@ export const algorithms: {
  */
 export const keyGenerators: KeyGenerators;
 
+// ========== 默认导出 ==========
 
+/**
+ * 默认导出对象，包含所有主要导出
+ */
+declare const _default: {
+  RateLimiter: typeof RateLimiter;
+  MemoryStore: typeof MemoryStore;
+  RedisStore: typeof RedisStore;
+  algorithms: typeof algorithms;
+  keyGenerators: typeof keyGenerators;
+};
 
+export default _default;
